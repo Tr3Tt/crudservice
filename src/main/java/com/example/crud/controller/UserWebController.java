@@ -14,7 +14,7 @@ public class UserWebController {
     private UserRepository userRepository;
 
     // GET /users показать список
-    @GetMapping("/users")
+    @GetMapping("/users/{id}")
     public String showUsers(Model model) {
         model.addAttribute("users", userRepository.findAll());
         return "users";
