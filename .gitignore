@@ -31,3 +31,18 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# H2 Database
+testdb.mv.db
+testdb.trace.db
+
+# IDE
+.idea/
+*.iml
+.gradle/
+build/
+target/
+
+# OS
+.DS_Store
+Thumbs.db
