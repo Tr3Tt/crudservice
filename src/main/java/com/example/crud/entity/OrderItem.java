@@ -1,5 +1,7 @@
 package com.example.crud.entity;
 
+import com.example.crud.entity.OrderItem;
+import com.example.crud.entity.User;
 import jakarta.persistence.*;
 
 @Entity

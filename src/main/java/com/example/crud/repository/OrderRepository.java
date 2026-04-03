@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserId(Long userId);
-    List<Order> findByUserIdAndCreatedTime(Long userId, LocalDateTime from, LocalDateTime to);
+    List<Order> findByUserIdAndCreatedAtBetween(Long userId, LocalDateTime from, LocalDateTime to);
 }

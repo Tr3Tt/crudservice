@@ -1,7 +1,11 @@
 package com.example.crud.dto;
 
+import java.math.BigDecimal;
+
 public class OrderItemDto {
     private Long productId;
+    private String productName;
+    private BigDecimal productPrice;
     private Integer quantity;
 
     public OrderItemDto() {}
@@ -12,6 +16,22 @@ public class OrderItemDto {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public BigDecimal getProductPrice() {
+        return productPrice;
+    }
+
+    public void setProductPrice(BigDecimal productPrice) {
+        this.productPrice = productPrice;
     }
 
     public Integer getQuantity() {

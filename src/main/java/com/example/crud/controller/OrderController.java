@@ -1,6 +1,8 @@
 package com.example.crud.controller;
 
+import com.example.crud.dto.OrderDto;
 import com.example.crud.dto.OrderItemDto;
+import com.example.crud.entity.OrderItem;
 import com.example.crud.entity.User;
 import com.example.crud.entity.Order;
 import com.example.crud.entity.Product;
@@ -13,10 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/users/{userId}/orders")
+@RequestMapping("/api/users/{userId}/orders")
 public class OrderController {
 
     @Autowired
@@ -28,29 +31,62 @@ public class OrderController {
     @Autowired
     private ProductRepository productRepository;
 
-    // Создание заказа для пользователя
+    private OrderDto toOrderDto(Order order) {
+        OrderDto dto = new OrderDto();
+        dto.setId(order.getId());
+        dto.setCreatedAt(order.getCreatedAt());
+        dto.setTotalPrice(order.getTotalPrice());
+
+        List<OrderItemDto> itemDtos = order.getItems().stream().map(item -> {
+            OrderItemDto itemDto = new OrderItemDto();
+            itemDto.setProductId(item.getProduct().getId());
+            itemDto.setProductName(item.getProduct().getName());
+            itemDto.setProductPrice(item.getProduct().getPrice());
+            itemDto.setQuantity(item.getQuantity());
+            return itemDto;
+        }).toList();
+
+        dto.setItems(itemDtos);
+        return dto;
+    }
+
+    // Создание заказа
     @PostMapping
-    public ResponseEntity<Order> createOrder(@PathVariable Long userId, @RequestBody List<OrderItemDto> items) {
+    public ResponseEntity<OrderDto> createOrder(@PathVariable Long userId, @RequestBody List<OrderItemDto> itemsDto) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Order order = new Order();
         order.setUser(user);
         order.setCreatedAt(LocalDateTime.now());
-        orderRepository.save(order);
+        order.setItems(new ArrayList<>());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(order);
+        for (OrderItemDto dto : itemsDto) {
+            Product product = productRepository.findById(dto.getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
+            OrderItem item = new OrderItem();
+            item.setProduct(product);
+            item.setQuantity(dto.getQuantity());
+            order.addItem(item);
+        }
+
+        order.calcAndSetTotalPrice();
+        Order savedOrder = orderRepository.save(order);
+
+        OrderDto dto = toOrderDto(savedOrder);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     // Список заказов пользователя
     @GetMapping
-    public ResponseEntity<List<Order>> getUserOrder(@PathVariable Long userId) {
+    public ResponseEntity<List<OrderDto>> getUserOrder(@PathVariable Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        return ResponseEntity.ok(orders);
+        List<OrderDto> dtos = orders.stream().map(this::toOrderDto).toList();
+        return ResponseEntity.ok(dtos);
     }
 
     // Заказы пользователя за период
     @GetMapping("/range")
-    public ResponseEntity<List<Order>> getUserOrderInRange(@PathVariable Long userId, @RequestParam LocalDateTime from, @RequestParam LocalDateTime to) {
-        List<Order> orders = orderRepository.findByUserIdAndCreatedTime(userId, from, to);
-        return ResponseEntity.ok(orders);
+    public ResponseEntity<List<OrderDto>> getUserOrderInRange(@PathVariable Long userId, @RequestParam LocalDateTime from, @RequestParam LocalDateTime to) {
+        List<Order> orders = orderRepository.findByUserIdAndCreatedAtBetween(userId, from, to);
+        List<OrderDto> dtos = orders.stream().map(this::toOrderDto).toList();
+        return ResponseEntity.ok(dtos);
     }
 }
